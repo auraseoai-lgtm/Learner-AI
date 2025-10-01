@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
-import openai
+import google.generativeai as genai
 import os
 
 app = Flask(__name__)
 
-# Configure OpenAI
-openai.api_key = os.environ.get('OPENAI_API_KEY')
+# Configure Google AI
+google_api_key = os.environ.get('GOOGLE_AI_KEY')
+if google_api_key:
+    genai.configure(api_key=google_api_key)
 
 @app.route('/')
 def home():
@@ -26,7 +28,7 @@ def home():
     <body>
         <div class="container">
             <h1>🚀 AuraSEO AI</h1>
-            <p style="text-align: center; color: #666;">Professional AI-Powered SEO Optimization</p>
+            <p style="text-align: center; color: #666;">Powered by Google AI</p>
             
             <textarea id="prompt" placeholder="Write a meta description for a coffee shop..."></textarea>
             
@@ -81,43 +83,38 @@ def generate_content():
         if not user_input:
             return jsonify({"success": False, "error": "No prompt provided"})
         
-        # Check if OpenAI key is configured
-        if not openai.api_key:
-            return jsonify({"success": False, "error": "OpenAI API key not configured in environment variables"})
+        # Check if Google AI key is configured
+        if not google_api_key:
+            return jsonify({"success": False, "error": "Google AI API key not configured"})
         
-        # Simple OpenAI call
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are AuraSEO AI, a professional SEO expert. Create high-quality SEO content."},
-                {"role": "user", "content": user_input}
-            ],
-            max_tokens=300,
-            temperature=0.7
+        # Google AI call
+        model = genai.GenerativeModel('gemini-pro')
+        response = model.generate_content(
+            f"You are AuraSEO AI, a professional SEO expert. Create high-quality, optimized SEO content for this request: {user_input}"
         )
         
-        result = response.choices[0].message.content
+        result = response.text
         
         return jsonify({
             "success": True, 
             "result": result,
-            "message": "AuraSEO AI completed your request"
+            "message": "AuraSEO AI (Google) completed your request"
         })
         
     except Exception as e:
         error_msg = str(e)
         return jsonify({
             "success": False, 
-            "error": f"OpenAI API error: {error_msg}",
-            "help": "Check your API key and billing"
+            "error": f"Google AI error: {error_msg}",
+            "help": "Check your Google AI API key"
         })
 
 @app.route('/debug')
 def debug():
     return jsonify({
-        "openai_configured": bool(openai.api_key),
+        "google_ai_configured": bool(google_api_key),
         "server_status": "running",
-        "message": "Debug endpoint working"
+        "message": "Using Google AI"
     })
 
 if __name__ == '__main__':
