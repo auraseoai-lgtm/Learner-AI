@@ -1,13 +1,11 @@
 from flask import Flask, request, jsonify
-import google.generativeai as genai
+import requests
 import os
 
 app = Flask(__name__)
 
-# Configure Google AI
-google_api_key = os.environ.get('GOOGLE_AI_KEY')
-if google_api_key:
-    genai.configure(api_key=google_api_key)
+# Configure Hugging Face
+hugging_face_token = os.environ.get('HUGGING_FACE_TOKEN')
 
 @app.route('/')
 def home():
@@ -28,7 +26,7 @@ def home():
     <body>
         <div class="container">
             <h1>🚀 AuraSEO AI</h1>
-            <p style="text-align: center; color: #666;">Powered by Google AI</p>
+            <p style="text-align: center; color: #666;">Powered by AI</p>
             
             <textarea id="prompt" placeholder="Write a meta description for a coffee shop..."></textarea>
             
@@ -83,38 +81,51 @@ def generate_content():
         if not user_input:
             return jsonify({"success": False, "error": "No prompt provided"})
         
-        # Check if Google AI key is configured
-        if not google_api_key:
-            return jsonify({"success": False, "error": "Google AI API key not configured"})
+        if not hugging_face_token:
+            return jsonify({"success": False, "error": "Hugging Face token not configured"})
         
-        # Google AI call with CORRECTED model name
-        model = genai.GenerativeModel('gemini-1.0-pro')
-        response = model.generate_content(
-            f"You are AuraSEO AI, a professional SEO expert. Create high-quality, optimized SEO content for this request: {user_input}"
-        )
+        # Hugging Face API call - using a reliable model
+        API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1"
+        headers = {"Authorization": f"Bearer {hugging_face_token}"}
         
-        result = response.text
+        payload = {
+            "inputs": f"Create SEO-optimized content for: {user_input}",
+            "parameters": {
+                "max_new_tokens": 300,
+                "temperature": 0.7,
+                "do_sample": True
+            }
+        }
         
-        return jsonify({
-            "success": True, 
-            "result": result,
-            "message": "AuraSEO AI (Google) completed your request"
-        })
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
         
+        if response.status_code == 200:
+            result = response.json()[0]['generated_text']
+            # Clean up the response
+            cleaned_result = result.replace(f"Create SEO-optimized content for: {user_input}", "").strip()
+            return jsonify({
+                "success": True, 
+                "result": cleaned_result,
+                "message": "AuraSEO AI completed your request"
+            })
+        else:
+            return jsonify({
+                "success": False, 
+                "error": f"Hugging Face API error: {response.status_code} - {response.text}"
+            })
+            
     except Exception as e:
-        error_msg = str(e)
         return jsonify({
             "success": False, 
-            "error": f"Google AI error: {error_msg}",
-            "help": "Check your Google AI API key"
+            "error": f"AI service error: {str(e)}"
         })
 
 @app.route('/debug')
 def debug():
     return jsonify({
-        "google_ai_configured": bool(google_api_key),
-        "server_status": "running",
-        "message": "Using Google AI - Model: gemini-1.0-pro"
+        "hugging_face_configured": bool(hugging_face_token),
+        "server_status": "running", 
+        "message": "Using Hugging Face AI"
     })
 
 if __name__ == '__main__':
