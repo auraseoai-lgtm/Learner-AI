@@ -87,8 +87,8 @@ def generate_content():
         if not google_api_key:
             return jsonify({"success": False, "error": "Google AI API key not configured"})
         
-        # Google AI call
-        model = genai.GenerativeModel('gemini-pro')
+        # Google AI call with corrected model name
+        model = genai.GenerativeModel('gemini-1.0-pro')
         response = model.generate_content(
             f"You are AuraSEO AI, a professional SEO expert. Create high-quality, optimized SEO content for this request: {user_input}"
         )
