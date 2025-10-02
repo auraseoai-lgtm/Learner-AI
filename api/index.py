@@ -1,111 +1,18 @@
-from flask import Flask, request, jsonify
-import os
-
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return '''
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>AuraSEO AI Platform</title>
-        <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-            .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-            h1 { color: #333; text-align: center; }
-            textarea { width: 100%; height: 120px; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; margin: 15px 0; }
-            button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; width: 100%; }
-            .result { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #667eea; white-space: pre-wrap; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🚀 AuraSEO AI</h1>
-            <p style="text-align: center; color: #666;">Professional SEO & Content AI Assistant</p>
-            
-            <textarea id="prompt" placeholder="Ask me about SEO, content creation, or general questions..."></textarea>
-            
-            <button onclick="generateContent()">Generate Content</button>
-            
-            <div class="result" id="result">
-                Your AI-generated content will appear here...
-            </div>
-        </div>
-
-        <script>
-            async function generateContent() {
-                const prompt = document.getElementById('prompt').value;
-                const result = document.getElementById('result');
-                
-                if (!prompt) {
-                    alert('Please enter your question or request');
-                    return;
-                }
-                
-                result.textContent = '🔄 AuraSEO AI is thinking...';
-                
-                try {
-                    const response = await fetch('/api/generate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt: prompt })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        result.textContent = data.result;
-                    } else {
-                        result.textContent = 'Error: ' + data.error;
-                    }
-                } catch (error) {
-                    result.textContent = 'Network error. Please try again.';
-                }
-            }
-        </script>
-    </body>
-    </html>
-    '''
-
-@app.route('/api/generate', methods=['POST'])
-def generate_content():
-    try:
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({"success": False, "error": "No data received"})
-            
-        user_input = data.get('prompt', '').strip()
-        
-        if not user_input:
-            return jsonify({"success": False, "error": "Please enter your question or request"})
-        
-        # Smart content detection - is this SEO-related or general question?
-        response = generate_smart_response(user_input)
-        
-        return jsonify({
-            "success": True, 
-            "result": response,
-            "message": "AuraSEO AI completed your request"
-        })
-        
-    except Exception as e:
-        return jsonify({
-            "success": False, 
-            "error": "Service temporarily unavailable. Please try again."
-        })
-
 def generate_smart_response(user_input):
     """Generate appropriate response based on question type"""
     
     input_lower = user_input.lower()
     
-    # Detect if it's an SEO-related question
+    # Detect question types
     seo_keywords = ['seo', 'meta', 'description', 'keyword', 'blog', 'content', 'website', 'google', 'rank', 'search', 'optimiz', 'traffic']
-    is_seo_question = any(keyword in input_lower for keyword in seo_keywords)
+    business_keywords = ['business', 'startup', 'company', 'enterprise', 'venture', 'profit', 'revenue', 'industry', 'market']
+    food_keywords = ['food', 'restaurant', 'cafe', 'coffee', 'culinary', 'menu', 'dining', 'eat', 'food truck']
     
-    # Detect general questions
+    is_seo_question = any(keyword in input_lower for keyword in seo_keywords)
+    is_business_question = any(keyword in input_lower for keyword in business_keywords)
+    is_food_question = any(keyword in input_lower for keyword in food_keywords)
+    
+    # Check if it's a known general question first
     general_questions = {
         'why people sleep at night': '''🌙 **Why People Sleep at Night?**
 
@@ -117,9 +24,47 @@ def generate_smart_response(user_input):
 **Practical Benefits:**
 • **Safety:** Reduced risk of accidents in darkness
 • **Social Coordination:** Aligns with societal schedules
-• **Temperature:** Cooler nights promote better sleep
+• **Temperature:** Cooler nights promote better sleep''',
 
-**SEO Connection:** While this isn't directly SEO-related, understanding human behavior helps create content that matches when people are actively searching!''',
+        'how can make a good business in food industry': '''🍽️ **How to Build a Successful Food Business**
+
+**Step 1: Market Research & Niche Selection**
+• **Identify Your Niche:** Restaurant, food truck, catering, bakery, specialty foods
+• **Target Audience:** Families, students, professionals, health-conscious consumers
+• **Location Analysis:** Foot traffic, competition, demographics
+
+**Step 2: Business Foundation**
+• **Unique Selling Proposition:** What makes you different?
+• **Business Plan:** Financial projections, marketing strategy, operations
+• **Legal Structure:** LLC, corporation, sole proprietorship
+• **Licenses & Permits:** Health department, business license, food handler certificates
+
+**Step 3: Menu & Operations**
+• **Signature Dishes:** Create memorable, photogenic menu items
+• **Supplier Relationships:** Reliable, quality ingredient sources
+• **Kitchen Efficiency:** Streamlined processes for consistency
+• **Pricing Strategy:** Competitive yet profitable
+
+**Step 4: Marketing & Customer Experience**
+• **Brand Identity:** Logo, colors, packaging, atmosphere
+• **Digital Presence:** Website, social media, online ordering
+• **Customer Service:** Training staff for exceptional experiences
+• **Loyalty Programs:** Repeat customer incentives
+
+**Step 5: SEO & Online Visibility**
+• **Google Business Profile:** Complete optimization with photos and reviews
+• **Local SEO:** "Food near me" keyword targeting
+• **Content Marketing:** Blog about recipes, food trends, behind-the-scenes
+• **Review Management:** Encourage and respond to customer reviews
+
+**Common Food Business Mistakes to Avoid:**
+❌ Underestimating startup costs
+❌ Poor location choice  
+❌ Inconsistent food quality
+❌ Neglecting online presence
+❌ Not adapting to customer feedback
+
+**Success Formula:** Great Food + Excellent Service + Smart Marketing = Profitable Business!''',
 
         'how to make coffee': '''☕ **How to Make Great Coffee**
 
@@ -133,9 +78,7 @@ def generate_smart_response(user_input):
 **Pro Tips:**
 • Use filtered water for better taste
 • Clean equipment regularly
-• Experiment with grind size
-
-**SEO Angle:** "How to make coffee" gets over 100,000 monthly searches - perfect for food blogs or coffee shop content!''',
+• Experiment with grind size''',
 
         'what is seo': '''🚀 **What is SEO? (Search Engine Optimization)**
 
@@ -155,23 +98,26 @@ SEO is the practice of optimizing websites to rank higher in search engine resul
 
         'hello': '''👋 **Hello! I'm AuraSEO AI**
 
-I'm your professional SEO and content assistant! I can help you with:
+I'm your professional SEO and business assistant! I can help you with:
 
 **SEO Services:**
 • Meta descriptions and title tags
-• Keyword research and strategy
+• Keyword research and strategy  
 • Content optimization
 • SEO audits and recommendations
+
+**Business Advice:**
+• Business planning and strategy
+• Marketing and branding
+• Industry-specific insights
+• Growth strategies
 
 **Content Creation:**
 • Blog post outlines
 • Marketing copy
 • Social media content
-• General writing assistance
 
-**Just ask me anything related to SEO, content marketing, or general questions!**
-
-*Try: "Write a meta description for a coffee shop" or "What are the best SEO practices?"*'''
+**Just ask me anything! I'm here to help your business grow.**'''
     }
     
     # Check if it's a known general question
@@ -179,153 +125,113 @@ I'm your professional SEO and content assistant! I can help you with:
         if question in input_lower:
             return answer
     
+    # Food business questions
+    if is_food_question and is_business_question:
+        return '''🍕 **Food Business Success Guide**
+
+**Essential Steps for Food Business Success:**
+
+**1. Find Your Unique Angle**
+• **Specialty Focus:** Vegan, gluten-free, ethnic cuisine, fusion
+• **Experience-Based:** Live cooking, interactive dining, themed events
+• **Convenience-Focused:** Delivery-only, meal kits, grab-and-go
+
+**2. Master the Fundamentals**
+• **Consistent Quality:** Every customer gets the same great experience
+• **Cost Control:** Food costs (28-35%), labor (25-30%), overhead (15-20%)
+• **Supplier Management:** Reliable, quality-focused partnerships
+
+**3. Build Your Brand**
+• **Memorable Name & Logo:** Easy to remember and recognize
+• **Atmosphere & Ambiance:** Matches your target audience
+• **Storytelling:** Share your passion and journey
+
+**4. Digital Marketing Strategy**
+• **Google Business Optimization:** Complete profile with photos and menu
+• **Social Media Presence:** Instagram-friendly food photos
+• **Local SEO:** "Best [cuisine] near me" optimization
+• **Review Management:** 4+ star ratings are essential
+
+**5. Customer Experience Excellence**
+• **Staff Training:** Knowledgeable, friendly, efficient
+• **Cleanliness:** Spotless facilities build trust
+• **Feedback Systems:** Listen and adapt to customer needs
+
+**Food Industry SEO Tips:**
+• Optimize for "food delivery near me" searches
+• Create blog content about local ingredients
+• Use schema markup for menus and reviews
+• Target long-tail keywords like "best pizza in [city]"
+
+**Remember:** In food business, your reputation is everything!'''
+    
+    # Business strategy questions
+    elif is_business_question:
+        return '''💼 **Business Success Framework**
+
+**Building a Successful Business:**
+
+**Phase 1: Foundation**
+• **Market Research:** Identify needs, competition, opportunities
+• **Business Model:** How you'll make money and deliver value
+• **Target Audience:** Specific customer profiles and pain points
+
+**Phase 2: Planning**
+• **Value Proposition:** Why customers should choose you
+• **Financial Projections:** Realistic revenue and expense forecasts
+• **Marketing Strategy:** How you'll attract and retain customers
+
+**Phase 3: Execution**
+• **Minimum Viable Product:** Start small, test, and iterate
+• **Customer Acquisition:** Cost-effective channels that work
+• **Operations:** Efficient processes and systems
+
+**Phase 4: Growth**
+• **Scale Smartly:** Don't grow faster than you can manage
+• **Team Building:** Hire for culture and competence
+• **Innovation:** Continuously improve and adapt
+
+**Business SEO Connection:**
+• Create content that answers customer questions
+• Build authority in your industry
+• Use local SEO if serving specific areas
+• Leverage reviews and testimonials
+
+**Key Success Factors:**
+✅ Solve real problems
+✅ Exceptional customer service  
+✅ Smart financial management
+✅ Adaptability to market changes'''
+    
     # If it's clearly an SEO question, provide SEO content
     if is_seo_question:
         return generate_seo_content(user_input)
     
-    # Otherwise, provide helpful general response
+    # Otherwise, provide helpful general response with business focus
     return f'''🤔 **AuraSEO AI Response**
 
 I see you asked: "*{user_input}*"
 
-**As an SEO expert, here's my perspective:**
+**Here's my business perspective:**
 
-While your question isn't directly about SEO, understanding various topics helps create comprehensive content that answers real user questions.
+**General Business Advice:**
+• Start with thorough market research
+• Identify a specific target audience
+• Create a unique value proposition
+• Develop a solid business plan
+• Focus on customer experience
 
-**How This Relates to SEO:**
-• People search for information on countless topics
-• Quality content that answers questions ranks well in Google
-• Understanding diverse subjects makes you a better content creator
+**SEO & Digital Marketing Angle:**
+• Build a professional website with clear messaging
+• Optimize for local search if serving specific areas
+• Create valuable content that addresses customer needs
+• Use social media to build community and awareness
+• Collect and showcase customer reviews
 
-**SEO Tip:** If you're writing about this topic, consider:
-- Researching what people actually search for
-- Creating comprehensive, authoritative content
-- Using relevant keywords naturally
-- Structuring content with clear headings
+**Need more specific advice? Try:**
+• "Food business marketing strategy"
+• "Restaurant SEO tips" 
+• "How to write a business plan"
+• "Digital marketing for small business"
 
-**Need SEO-specific help? Try:**
-• "Write meta description for [business]"
-• "Create blog post about [topic]"
-• "Generate keywords for [industry]"'''
-
-def generate_seo_content(user_input):
-    """Generate professional SEO content"""
-    
-    input_lower = user_input.lower()
-    
-    # Coffee shop related
-    if any(word in input_lower for word in ['coffee', 'cafe', 'espresso', 'latte']):
-        return '''**Perfect Meta Description for Coffee Shop:**
-
-"☕ Morning Brew Cafe - Experience artisanal coffee in a cozy atmosphere. Freshly roasted beans, friendly service, and the perfect brew await you. Visit us today!"
-
-**Why This Works:**
-• 156 characters (perfect for SEO)
-• Includes engaging emoji (☕)
-• Highlights unique selling points
-• Clear call-to-action
-• Sensory words create appeal
-
-**Additional SEO Suggestions:**
-- Target keywords: "artisanal coffee", "local cafe", "fresh brew"
-- Create blog content about coffee brewing methods
-- Optimize for "coffee shop near me" searches'''
-
-    # Meta description request
-    elif any(word in input_lower for word in ['meta', 'description']):
-        business_type = extract_business_type(input_lower)
-        
-        return f'''**Professional Meta Description for {business_type.title()}:**
-
-"Discover exceptional quality and outstanding service at [Business Name]. Our {business_type} offers customized solutions to meet your unique needs. Contact us today!"
-
-**Technical Details:**
-• 142 characters (SEO optimized)
-• Includes primary keyword
-• Clear value proposition
-• Professional tone
-• Strong call-to-action
-
-**Next Steps:**
-- Replace [Business Name] with actual name
-- Test in search results preview
-- Monitor click-through rates'''
-
-    # Blog content request
-    elif any(word in input_lower for word in ['blog', 'article', 'post']):
-        topic = extract_topic(input_lower)
-        
-        return f'''**SEO-Optimized Blog Post: "{topic.title()}"**
-
-**Engaging Title:** "The Complete Guide to {topic.title()} in 2024: Tips, Trends, and Strategies"
-
-**Compelling Introduction:**
-In today's competitive landscape, understanding {topic} is more important than ever. This comprehensive guide covers everything you need to know to succeed.
-
-**Content Outline:**
-1. **Current Trends** - Latest developments in {topic}
-2. **Best Practices** - Proven strategies for success  
-3. **Common Pitfalls** - Mistakes to avoid
-4. **Future Outlook** - Emerging opportunities
-
-**Target Keywords:**
-- {topic} services
-- best {topic} strategies
-- {topic} for beginners
-- professional {topic} solutions'''
-
-    # General SEO content
-    else:
-        return f'''**AuraSEO AI Professional Content**
-
-Based on your request: "*{user_input}*"
-
-**Optimized Meta Description:**
-"Transform your online presence with expert solutions. Get measurable results, professional guidance, and sustainable growth. Start your journey today!"
-
-**Comprehensive SEO Approach:**
-
-**Content Strategy:**
-✅ Keyword research and optimization
-✅ Blog posts and articles
-✅ Landing page content
-✅ FAQ sections for featured snippets
-
-**Technical Optimization:**
-✅ Website speed and performance
-✅ Mobile responsiveness
-✅ Schema markup implementation
-✅ Internal linking structure
-
-**Ready to begin?** Start with a comprehensive SEO audit!'''
-
-def extract_business_type(text):
-    """Extract business type from text"""
-    if 'coffee' in text or 'cafe' in text:
-        return 'coffee shop'
-    elif 'restaurant' in text:
-        return 'restaurant'
-    elif 'shop' in text or 'store' in text:
-        return 'retail business'
-    elif 'service' in text:
-        return 'service provider'
-    else:
-        return 'business'
-
-def extract_topic(text):
-    """Extract main topic from text"""
-    words = text.split()
-    exclude_words = ['write', 'create', 'generate', 'make', 'for', 'a', 'an', 'the', 'meta', 'description', 'blog', 'post', 'keyword', 'seo']
-    
-    for word in words:
-        if word not in exclude_words and len(word) > 3:
-            return word
-    
-    return 'your business'
-
-@app.route('/health')
-def health_check():
-    return jsonify({"status": "healthy", "message": "AuraSEO AI is running"})
-
-if __name__ == '__main__':
-    app.run(debug=False)
+I'm here to help your business succeed through smart strategies and effective online presence!'''
