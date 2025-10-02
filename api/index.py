@@ -22,14 +22,14 @@ def home():
     <body>
         <div class="container">
             <h1>🚀 AuraSEO AI</h1>
-            <p style="text-align: center; color: #666;">Professional SEO AI Assistant</p>
+            <p style="text-align: center; color: #666;">Professional SEO & Content AI Assistant</p>
             
-            <textarea id="prompt" placeholder="Write a meta description for a coffee shop..."></textarea>
+            <textarea id="prompt" placeholder="Ask me about SEO, content creation, or general questions..."></textarea>
             
-            <button onclick="generateContent()">Generate SEO Content</button>
+            <button onclick="generateContent()">Generate Content</button>
             
             <div class="result" id="result">
-                Your AI content will appear here...
+                Your AI-generated content will appear here...
             </div>
         </div>
 
@@ -39,11 +39,11 @@ def home():
                 const result = document.getElementById('result');
                 
                 if (!prompt) {
-                    alert('Please enter your SEO request');
+                    alert('Please enter your question or request');
                     return;
                 }
                 
-                result.textContent = '🔄 AuraSEO AI is working...';
+                result.textContent = '🔄 AuraSEO AI is thinking...';
                 
                 try {
                     const response = await fetch('/api/generate', {
@@ -79,26 +79,137 @@ def generate_content():
         user_input = data.get('prompt', '').strip()
         
         if not user_input:
-            return jsonify({"success": False, "error": "Please enter your SEO request"})
+            return jsonify({"success": False, "error": "Please enter your question or request"})
         
-        # Generate professional SEO content based on input
-        result = generate_seo_content(user_input)
+        # Smart content detection - is this SEO-related or general question?
+        response = generate_smart_response(user_input)
         
         return jsonify({
             "success": True, 
-            "result": result,
+            "result": response,
             "message": "AuraSEO AI completed your request"
         })
         
     except Exception as e:
-        # Safe error handling
         return jsonify({
             "success": False, 
             "error": "Service temporarily unavailable. Please try again."
         })
 
+def generate_smart_response(user_input):
+    """Generate appropriate response based on question type"""
+    
+    input_lower = user_input.lower()
+    
+    # Detect if it's an SEO-related question
+    seo_keywords = ['seo', 'meta', 'description', 'keyword', 'blog', 'content', 'website', 'google', 'rank', 'search', 'optimiz', 'traffic']
+    is_seo_question = any(keyword in input_lower for keyword in seo_keywords)
+    
+    # Detect general questions
+    general_questions = {
+        'why people sleep at night': '''🌙 **Why People Sleep at Night?**
+
+**Biological Reasons:**
+• **Circadian Rhythm:** Our internal body clock is programmed for daytime activity and nighttime rest
+• **Melatonin Production:** Darkness triggers melatonin, the sleep hormone
+• **Evolution:** Humans evolved to be daytime hunters/gatherers - night was dangerous
+
+**Practical Benefits:**
+• **Safety:** Reduced risk of accidents in darkness
+• **Social Coordination:** Aligns with societal schedules
+• **Temperature:** Cooler nights promote better sleep
+
+**SEO Connection:** While this isn't directly SEO-related, understanding human behavior helps create content that matches when people are actively searching!''',
+
+        'how to make coffee': '''☕ **How to Make Great Coffee**
+
+**Basic Steps:**
+1. **Choose Quality Beans:** Freshly roasted coffee beans
+2. **Proper Grinding:** Grind just before brewing
+3. **Correct Measurements:** 2 tablespoons coffee per 6 ounces water
+4. **Water Temperature:** 195-205°F (90-96°C)
+5. **Brew Time:** 4-5 minutes for optimal extraction
+
+**Pro Tips:**
+• Use filtered water for better taste
+• Clean equipment regularly
+• Experiment with grind size
+
+**SEO Angle:** "How to make coffee" gets over 100,000 monthly searches - perfect for food blogs or coffee shop content!''',
+
+        'what is seo': '''🚀 **What is SEO? (Search Engine Optimization)**
+
+**SEO Definition:** 
+SEO is the practice of optimizing websites to rank higher in search engine results, driving organic (free) traffic.
+
+**Main Components:**
+✅ **On-Page SEO:** Content, meta tags, headings
+✅ **Technical SEO:** Site speed, mobile-friendliness, structure  
+✅ **Off-Page SEO:** Backlinks, social signals, authority
+✅ **Local SEO:** Google Business Profile, local citations
+
+**Why It Matters:**
+• 93% of online experiences begin with search engines
+• SEO leads have a 14.6% close rate vs. 1.7% for outbound
+• Cost-effective long-term strategy''',
+
+        'hello': '''👋 **Hello! I'm AuraSEO AI**
+
+I'm your professional SEO and content assistant! I can help you with:
+
+**SEO Services:**
+• Meta descriptions and title tags
+• Keyword research and strategy
+• Content optimization
+• SEO audits and recommendations
+
+**Content Creation:**
+• Blog post outlines
+• Marketing copy
+• Social media content
+• General writing assistance
+
+**Just ask me anything related to SEO, content marketing, or general questions!**
+
+*Try: "Write a meta description for a coffee shop" or "What are the best SEO practices?"*'''
+    }
+    
+    # Check if it's a known general question
+    for question, answer in general_questions.items():
+        if question in input_lower:
+            return answer
+    
+    # If it's clearly an SEO question, provide SEO content
+    if is_seo_question:
+        return generate_seo_content(user_input)
+    
+    # Otherwise, provide helpful general response
+    return f'''🤔 **AuraSEO AI Response**
+
+I see you asked: "*{user_input}*"
+
+**As an SEO expert, here's my perspective:**
+
+While your question isn't directly about SEO, understanding various topics helps create comprehensive content that answers real user questions.
+
+**How This Relates to SEO:**
+• People search for information on countless topics
+• Quality content that answers questions ranks well in Google
+• Understanding diverse subjects makes you a better content creator
+
+**SEO Tip:** If you're writing about this topic, consider:
+- Researching what people actually search for
+- Creating comprehensive, authoritative content
+- Using relevant keywords naturally
+- Structuring content with clear headings
+
+**Need SEO-specific help? Try:**
+• "Write meta description for [business]"
+• "Create blog post about [topic]"
+• "Generate keywords for [industry]"'''
+
 def generate_seo_content(user_input):
-    """Generate professional SEO content without external APIs"""
+    """Generate professional SEO content"""
     
     input_lower = user_input.lower()
     
@@ -120,25 +231,7 @@ def generate_seo_content(user_input):
 - Create blog content about coffee brewing methods
 - Optimize for "coffee shop near me" searches'''
 
-    # Restaurant related
-    elif any(word in input_lower for word in ['restaurant', 'dining', 'food', 'meal']):
-        return '''**Compelling Meta Description for Restaurant:**
-
-"🍽️ [Restaurant Name] - Exceptional dining experience with chef-crafted dishes, warm ambiance, and impeccable service. Make your reservation today!"
-
-**SEO Optimization:**
-• 148 characters (ideal length)
-• Food emoji grabs attention
-• Emphasizes quality and experience
-• Strong reservation call-to-action
-
-**Keyword Strategy:**
-- "fine dining experience"
-- "chef-crafted dishes" 
-- "restaurant reservation"
-- "[cuisine type] restaurant"'''
-
-    # General meta description request
+    # Meta description request
     elif any(word in input_lower for word in ['meta', 'description']):
         business_type = extract_business_type(input_lower)
         
@@ -179,73 +272,32 @@ In today's competitive landscape, understanding {topic} is more important than e
 - {topic} services
 - best {topic} strategies
 - {topic} for beginners
-- professional {topic} solutions
+- professional {topic} solutions'''
 
-**SEO Tips:**
-- Use H2 headings for each section
-- Include internal links to related content
-- Add relevant images with alt text
-- Optimize for featured snippets'''
-
-    # Keyword research request
-    elif any(word in input_lower for word in ['keyword', 'key word']):
-        topic = extract_topic(input_lower)
-        
-        return f'''**SEO Keywords for "{topic.title()}":**
-
-**Primary Keywords:**
-- {topic} services
-- professional {topic}
-- best {topic} solutions
-
-**Long-Tail Keywords:**
-- affordable {topic} near me
-- {topic} for beginners
-- how to choose {topic}
-- top rated {topic} companies
-
-**LSI Keywords:**
-- {topic} tips
-- {topic} guide  
-- {topic} benefits
-- {topic} best practices
-
-**Keyword Research Strategy:**
-- Use Google Keyword Planner
-- Analyze competitor keywords
-- Focus on buyer intent keywords
-- Monitor search volume trends'''
-
-    # General SEO request
+    # General SEO content
     else:
-        topic = extract_topic(input_lower)
-        
-        return f'''**AuraSEO AI Professional Content for "{topic.title()}":**
+        return f'''**AuraSEO AI Professional Content**
+
+Based on your request: "*{user_input}*"
 
 **Optimized Meta Description:**
-"Transform your {topic} with our expert solutions. Get measurable results, professional guidance, and sustainable growth. Start your journey today!"
+"Transform your online presence with expert solutions. Get measurable results, professional guidance, and sustainable growth. Start your journey today!"
 
-**Comprehensive SEO Strategy:**
-
-**On-Page Optimization:**
-✅ Meta tags and descriptions
-✅ Header tag structure (H1, H2, H3)
-✅ Keyword-optimized content
-✅ Internal linking strategy
+**Comprehensive SEO Approach:**
 
 **Content Strategy:**
+✅ Keyword research and optimization
 ✅ Blog posts and articles
-✅ Landing page optimization  
+✅ Landing page content
 ✅ FAQ sections for featured snippets
-✅ Regular content updates
 
-**Technical SEO:**
-✅ Website speed optimization
+**Technical Optimization:**
+✅ Website speed and performance
 ✅ Mobile responsiveness
-✅ XML sitemap implementation
-✅ Schema markup
+✅ Schema markup implementation
+✅ Internal linking structure
 
-**Ready to begin?** Contact us for a free SEO audit!'''
+**Ready to begin?** Start with a comprehensive SEO audit!'''
 
 def extract_business_type(text):
     """Extract business type from text"""
